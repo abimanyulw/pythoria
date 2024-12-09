@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pythoria</title>
+  
+  <!-- Add Papaparse CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>  
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+  <!-- Add Google Fonts for Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+
+  <!-- Add CSS styles -->
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f7f7f7;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header Styles */
+    header {
+      background-color: transparent;
+      padding: 20px;
+      text-align: center;
+      box-shadow: none;
+    }
+
+    header h1 {
+      font-size: 32px;
+      font-weight: 600;
+      margin: 0;
+      color: #333;
+    }
+    
+    /* Input Container Styles */
+.input-container {
+  margin-top: 10px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.input-container label {
+  font-size: 12px;
+  color: #000000;
+  margin-bottom: 8px;
+  display: block;
+  text-align: left;
+  font-weight: bold;
+}
+
+.input-container input {
+  width: 100%;
+  padding: 10px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
+}
+
+.input-container input:focus {
+  border-color: #333;
+}
+
+
+
+    header p {
+      font-size: 18px;
+      font-weight: 300;
+      color: #555;
+      margin-top: 5px;
+    }
+
+    /* Problem display styles */
+    #problemDisplay {
+      margin-top: 20px;
+      display: none; /* Hide initially */
+    }
+
+    .problem {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+      text-align: justify;
+      
+    }
+
+    .problem h2 {
+      font-size: 16px; /* Small size for "Pertanyaan 1" */
+      font-weight: 600;
+      margin: 0 0 10px;
+      color: #333;
+    }
+
+    .problem p {
+      font-weight: 300; /* Light weight for problem description */
+      font-size: 16px;
+      color: #555;
+    }
+
+    .problem .id {
+      font-size: 12px;
+      color: #888;
+      margin-top: 10px;
+    }
+
+    /* Footer Styles */
+    footer {
+      background-color: transparent;
+      color: #333;
+      text-align: center;
+      padding: 10px 0;
+      font-size: 14px;
+      margin-top: 20px;
+      box-shadow: none;
+    }
+
+    /* General Layout Fixes */
+    .problem p, .problem h2 {
+      text-align: justify;
+    }
+
+    /* Ensures that content width does not overflow */
+    body, #problemDisplay {
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Loading circle styles */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .loading-circle {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #000;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Pythoria</h1>
+    <p>Go Get Gold</p>
+  </header>
+  
+   <!-- Input Nama dan Kelas -->
+  <div class="input-container">
+    <label for="name">Nama:</label>
+    <input type="text" id="name" placeholder="" />
+    <label for="class">Kelas:</label>
+    <input type="text" id="class" placeholder="" />
+  </div>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-circle"></div>
+  </div>
+
+  <div id="problemDisplay"></div>
+<button onclick="printPage()" style="margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; background-color: transparent; color: black; border: black solid 1px; border-radius: 5px;">
+  Print Page
+</button>
+  <footer>
+    <p>&copy; 2024 Abimanyu. Karya ini aku persembahkan sebagai hadiah untuk ulang tahunku.</p>
+  </footer>
+
+  <script>
+    let problems = [];
+
+    // Function to parse the "soal.csv" file and store problem data
+    function loadCSV() {
+      fetch('soal.csv')
+        .then(response => response.text())
+        .then(text => {
+          Papa.parse(text, {
+            complete: function(results) {
+              if (results.errors.length === 0 && results.data.length > 1) {
+                // If no parsing errors and data is not empty
+                problems = results.data.map((row, index) => ({
+                  contest: row[0],
+                  problem: row[2],
+                  indexInCSV: index + 1 // Store the index in the CSV for ID format
+                })).filter(problem => problem.contest && problem.problem);
+
+                // After successful load, hide the loading circle and display the content
+                document.getElementById("loadingOverlay").style.display = "none";
+                showRandomProblems(); // Display problems
+              } else {
+                console.error("CSV file has errors or is empty.");
+                // You can choose to handle it silently, logging the issue for developers only.
+                document.getElementById("loadingOverlay").style.display = "none";
+              }
+            }
+          });
+        })
+        .catch(error => {
+          console.error("Error loading CSV file:", error);
+          document.getElementById("loadingOverlay").style.display = "none";
+        });
+    }
+
+    // Display random problems
+    function showRandomProblems() {
+      if (problems.length === 0) {
+        return;
+      }
+
+      let randomProblemsHtml = '';
+      
+      // Pick 10 random problems
+      for (let i = 0; i < 10; i++) {
+        const randomIndex = Math.floor(Math.random() * problems.length);
+        const selectedProblem = problems[randomIndex];
+
+        // Replace $ at the start with and $ at the end with for inline LaTeX rendering
+        let problemText = selectedProblem.problem.replace(/\$(.*?)\$/g, '\\($1\\)');
+
+        // Format ID as 3 digits (e.g., ID: 005)
+        const problemId = selectedProblem.indexInCSV.toString().padStart(3, '0');
+
+        // Append the selected problem to the HTML string
+        randomProblemsHtml += `
+          <div class="problem">
+            <h2>Pertanyaan ${i + 1}</h2>
+            <p>${problemText}</p>
+            <div class="id">ID: ${problemId}</div>
+          </div>
+        `;
+      }
+
+      document.getElementById("problemDisplay").innerHTML = randomProblemsHtml;
+      document.getElementById("problemDisplay").style.display = "block"; // Show the problems
+
+      // Re-render the MathJax content to properly process LaTeX
+      if (typeof MathJax !== "undefined" && MathJax.Hub) {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub, "problemDisplay"]);
+      }
+    }
+
+    // Function to print the page
+    function printPage() {
+      window.print();
+    }
+
+    // Load the CSV file when the page loads
+    window.onload = loadCSV;
+  </script>
+</body>
+</html>
